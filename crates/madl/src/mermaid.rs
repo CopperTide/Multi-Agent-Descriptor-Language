@@ -146,7 +146,16 @@ fn workflows(doc: &Document, out: &mut String) {
             let _ = writeln!(out, "    {}{}", stage_node(w, &s.id), stage_shape(s));
         }
         let _ = writeln!(out, "  end");
-        let _ = writeln!(out, "  {} ==>|items| {}", node(&w.dispatcher), stage_node(w, &w.entry));
+        let from = match (&w.dispatcher, &w.dispatch) {
+            (Some(d), _) => node(d),
+            (None, Some(d)) => {
+                let n = node(&format!("{}__dispatch-command", w.id));
+                let _ = writeln!(out, "  {n}[[\"{}\"]]", label(&d.command));
+                n
+            }
+            (None, None) => continue,
+        };
+        let _ = writeln!(out, "  {from} ==>|items| {}", stage_node(w, &w.entry));
         for s in &w.stages {
             for (outcome, next) in &s.routes {
                 let to = next.as_deref().map_or_else(|| node(&w.collector), |n| stage_node(w, n));

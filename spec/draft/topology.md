@@ -56,6 +56,10 @@ A workflow passes items through stages ([MEP 0007](../../meps/0007-workflows.md)
 the workflow's `input` into items and hands each to the `entry` stage; every stage reports an outcome,
 and the stage's `routes` say where that outcome takes the item next. A route to `null` completes the
 item, and the `collector` assembles the completed items. The outcome `blocked` always stops an item.
+Instead of a `dispatcher` agent, a workflow may name a `dispatch` command (`command`, optional
+`timeout_s`): the Runner runs it in the workspace when the system starts, and its standard output is
+the items; the workflow's agents then start with the system. A workflow names exactly one of
+`dispatcher` and `dispatch` (`workflow-dispatch`).
 
 ```yaml
 workflows:

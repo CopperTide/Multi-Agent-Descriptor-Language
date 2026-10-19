@@ -13,7 +13,25 @@ impl Refs<'_> {
             if let Some(input) = &flow.input {
                 self.expect(input, format!("{at}/input"), &[Kind::Input], false);
             }
-            self.expect(&flow.dispatcher, format!("{at}/dispatcher"), &[Kind::Agent], false);
+            match (&flow.dispatcher, &flow.dispatch) {
+                (Some(d), None) => self.expect(d, format!("{at}/dispatcher"), &[Kind::Agent], false),
+                (None, Some(d)) if d.command.trim().is_empty() => self.report.push(Diagnostic::error(
+                    "workflow-dispatch",
+                    format!("{at}/dispatch/command"),
+                    "the dispatch command is empty",
+                )),
+                (None, Some(_)) => {}
+                (Some(_), Some(_)) => self.report.push(Diagnostic::error(
+                    "workflow-dispatch",
+                    format!("{at}/dispatch"),
+                    "a workflow names a dispatcher or a dispatch command, not both",
+                )),
+                (None, None) => self.report.push(Diagnostic::error(
+                    "workflow-dispatch",
+                    at.clone(),
+                    "a workflow needs a dispatcher agent or a dispatch command",
+                )),
+            }
             self.expect(&flow.collector, format!("{at}/collector"), &[Kind::Agent], false);
             for (s, stage) in flow.stages.iter().enumerate() {
                 self.stage_agents(stage, &format!("{at}/stages/{s}"));

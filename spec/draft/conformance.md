@@ -36,6 +36,7 @@ fault, and a sentence. Tools and fixtures match on the code and pointer; the sen
 | `remote-needs-endpoint` | error | `runtime: remote-a2a` without `endpoint` |
 | `step-field`, `pattern-shape`, `deny-shape` | error | A step, pattern or ban without what its kind needs, or with what it doesn't use |
 | `stage-field` | error | A workflow stage without what its kind needs, or with what another kind uses |
+| `workflow-dispatch` | error | A workflow with both a `dispatcher` and a `dispatch` command, neither, or an empty command |
 | `tool-shape` | error | A tool that says it is more than one thing |
 | `restriction-loosened` | error | A block loosening an inherited restriction |
 | `budget-soft-above-hard`, `budget-percent-out-of-range`, `budget-no-room`, `budget-no-windows` | error | A [limit](settings.md#limits) whose soft value is above its hard one, a plan share outside 0–100%, a run with room for no agent, or a pause for no window |

@@ -1,0 +1,4 @@
+madl: draft
+system: { id: s, name: S }
+agents: [ { id: d } ]
+workflows: [ { id: w, dispatcher: d, dispatch: { command: ./split }, entry: one, collector: d, stages: [ { id: one, agent: d, routes: { done: null } } ] } ]

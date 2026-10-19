@@ -18,7 +18,9 @@ in its own extension, which a reader that ignores extensions could not see.
 
 A top-level `workflows` list. Each workflow has an `id`, a `name`, the `input` it splits, a
 `dispatcher`, an `entry` stage, a `collector`, `max_items`, `max_steps` (per item), `copies` (`shared` or
-`per-item`) and `stages`.
+`per-item`) and `stages`. In place of a `dispatcher` agent, a workflow may name a `dispatch` command
+(`command`, `timeout_s`): the Runner runs it in the workspace when the system starts, and its standard
+output is the items. A workflow names exactly one of the two.
 
 ```yaml
 workflows:
@@ -50,7 +52,9 @@ layout:
 
 ## Validation
 
-New code `stage-field` (a stage without what its kind needs, or with what another kind uses).
+New codes `stage-field` (a stage without what its kind needs, or with what another kind uses) and
+`workflow-dispatch` (a workflow with both a `dispatcher` and a `dispatch` command, neither, or an empty
+command).
 `duplicate-id`, `bad-id` and `unknown-reference` cover stage ids, routes, `entry`, `on_limit`, the
 workflow's agents and its input.
 

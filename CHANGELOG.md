@@ -12,7 +12,8 @@ The first public draft.
 - MEP 0007: `workflows`: a dispatcher splits an input into items that pass through `agent`, review
   panel, `check`, `human` and `merge` stages along outcome routes, with round limits, `on_limit`,
   escalation, `max_items`, `max_steps` and per-item copies; `layout.stages`; `madl graph` draws them.
-  New code `stage-field`.
+  A workflow may name a `dispatch` command instead of a `dispatcher` agent: its output is the items.
+  New codes `stage-field` and `workflow-dispatch`.
 
 - MEP 0006: top-level `tools` given to agents by id, with `hook`, `plugin` and `skills` tools,
   `headers`, `instructions`, `runtimes`, `requires`, `install` and `homepage`; `preferences.models`

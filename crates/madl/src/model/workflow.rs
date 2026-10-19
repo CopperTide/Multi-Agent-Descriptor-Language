@@ -18,8 +18,16 @@ pub struct Workflow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub input: Option<String>,
-    /// The agent that splits the input into items and hands each to the entry stage.
-    pub dispatcher: String,
+    /// The agent that splits the input into items and hands each to the entry stage. A workflow names
+    /// either a `dispatcher` or a `dispatch` command (`workflow-dispatch`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub dispatcher: Option<String>,
+    /// A command whose output is the items, run by the runner when the system starts, in place of a
+    /// dispatcher agent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub dispatch: Option<Dispatch>,
     /// The stage every item starts at.
     pub entry: String,
     /// The agent that assembles the completed items.
@@ -40,6 +48,18 @@ pub struct Workflow {
     #[serde(default, skip_serializing_if = "Extensions::is_empty")]
     #[ts(as = "Option<Extensions>", optional)]
     pub extensions: Extensions,
+}
+
+/// A workflow's dispatch command: run in the system's workspace, its standard output is the items.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(export)]
+pub struct Dispatch {
+    pub command: String,
+    /// Seconds before the command is stopped. Absent: the runner's own limit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub timeout_s: Option<u32>,
 }
 
 /// One stage. Ids are unique within the workflow. Which fields apply depends on `kind`.

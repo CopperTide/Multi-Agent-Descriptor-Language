@@ -1,0 +1,13 @@
+# MEP 0007: a command, not an agent, can split the input: its output is the items.
+madl: draft
+system: { id: issues, name: Issues }
+agents:
+  - { id: fixer, runtime: claude-code }
+  - { id: lead, runtime: claude-code }
+workflows:
+  - id: fixes
+    dispatch: { command: "gh issue list --json number,title | ./to-items", timeout_s: 120 }
+    entry: fix
+    collector: lead
+    stages:
+      - { id: fix, agent: fixer, routes: { done: null } }

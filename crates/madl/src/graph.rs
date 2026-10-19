@@ -56,7 +56,10 @@ pub fn starting_agents(doc: &Document) -> BTreeSet<String> {
         .map(|e| e.to.as_str())
         .collect();
     for w in &doc.workflows {
-        fed.extend(workflow_agents(w).into_iter().filter(|a| *a != w.dispatcher));
+        // A dispatcher agent feeds the workflow's agents; a dispatch command's agents start with the system.
+        if let Some(d) = &w.dispatcher {
+            fed.extend(workflow_agents(w).into_iter().filter(|a| *a != d));
+        }
     }
     let mut out: BTreeSet<String> =
         doc.inputs.iter().flat_map(|i| i.to.iter().flat_map(|t| nodes_of(doc, t))).collect();
@@ -79,7 +82,9 @@ pub fn reachable(doc: &Document, starts: &BTreeSet<String>) -> BTreeSet<String> 
     for w in &doc.workflows {
         let mut team = workflow_agents(w);
         team.push(&w.collector);
-        next.entry(w.dispatcher.as_str()).or_default().extend(team);
+        if let Some(d) = &w.dispatcher {
+            next.entry(d.as_str()).or_default().extend(team);
+        }
     }
     let mut seen: BTreeSet<String> = starts.clone();
     let mut queue: Vec<String> = starts.iter().cloned().collect();
