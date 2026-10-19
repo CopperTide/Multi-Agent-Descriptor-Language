@@ -20,3 +20,6 @@ agents:
   - id: free
     runtime: codex
     settings: { preferences: { context: { managed: false } } }
+  - id: worker
+    runtime: claude-code
+    settings: { preferences: { briefing: minimal } }

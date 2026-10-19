@@ -89,6 +89,10 @@ pub struct Preferences {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub resume: Option<Resume>,
+    /// How much of the system an agent is told when it starts (MEP 0008). Absent: `full`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub briefing: Option<Briefing>,
     /// The language agents write in, as a BCP 47 tag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -123,6 +127,16 @@ pub enum Resume {
     ResumeIfPossible,
     RelaunchFresh,
     CheckpointOnly,
+}
+
+/// `full`: the system's shape, its neighbours' jobs and the working rules. `minimal`: only the agent's
+/// own instructions, contracts and how to finish, for agents that need nothing but their assignment.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(rename_all = "kebab-case")]
+#[ts(export)]
+pub enum Briefing {
+    Full,
+    Minimal,
 }
 
 /// What happens when an agent asks a person something.

@@ -33,6 +33,10 @@ agents:
     settings: { preferences: { context: { managed: false } } }
 ```
 
+- **`preferences.briefing`**: `full` (the default) or `minimal`. How much of the system an agent is
+  told when it starts: the system's shape, its neighbours' jobs and the working rules, or only its
+  own instructions, contracts and how to finish. An agent that needs nothing but its assignment
+  starts smaller with `minimal`.
 - **`preferences.context`**: `read_max_kb`, `tool_output_chars`, `refresh_at_tokens`, and `managed`
   (`false`: none of these limits, nor the runner's own). Merged key by key.
 - **`preferences.config`**: `user` and `project`, booleans. Merged key by key.

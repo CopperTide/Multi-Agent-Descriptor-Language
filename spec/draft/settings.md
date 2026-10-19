@@ -46,6 +46,7 @@ limits: MADL sets no limit the author did not set.
 | `workspace` | The agents' `folder` and `copy`; each member an agent's own `workspace` leaves out comes from here (MEP 0006) |
 | `protocol` | The default [protocol](communication.md#protocols) |
 | `resume` | `resume-if-possible`, `relaunch-fresh`, `checkpoint-only` |
+| `briefing` | `full` (default): the agent is told the system's shape, its neighbours' jobs and the working rules; `minimal`: only its own instructions, contracts and how to finish |
 | `language` | A BCP 47 tag |
 | `questions` | `timeout` (a duration) and `on_timeout`: `continue`, `wait`, `stop` |
 | `options` | Runtime-specific options, merged key by key |
