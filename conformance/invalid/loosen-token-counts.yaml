@@ -1,0 +1,4 @@
+madl: draft
+system: { id: s, name: S }
+defaults: { restrictions: { budget: { tokens: 1000000 } } }
+agents: [ { id: a, settings: { restrictions: { budget: { counts: output } } } } ]

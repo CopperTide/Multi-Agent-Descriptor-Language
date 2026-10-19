@@ -38,12 +38,12 @@ pub(super) fn add(b: &mut Builder, node: &super::load::Node, agent: &mut Agent) 
             Some(names) => allow.extend(names.iter().map(|n| format!("{}/{n}", tool.id))),
             None => allow.push(tool.id.clone()),
         }
-        agent.tools.push(tool);
+        agent.tools.push(tool.into());
     }
     if filtered {
         let settings = agent.settings.get_or_insert_with(Settings::default);
         let restrictions = settings.restrictions.get_or_insert_with(Restrictions::default);
-        restrictions.tools = Some(ToolRule { allow: Some(allow), deny: Vec::new() });
+        restrictions.tools = Some(ToolRule { allow: Some(allow), ..Default::default() });
     }
     kept
 }
@@ -108,12 +108,12 @@ fn stdio_server(b: &mut Builder, at: &str, p: &Value) -> McpServer {
         command: p.get("command").and_then(Value::as_str).map(str::to_string),
         args: args.filter_map(Value::as_str).map(str::to_string).collect(),
         env: env.into_iter().map(|k| (k.clone(), EnvValue::Secret(SecretRef { secret: k }))).collect(),
-        url: None,
+        ..Default::default()
     }
 }
 
 fn free_tool_id(agent: &Agent, wanted: &str) -> String {
-    let taken = |id: &str| agent.tools.iter().any(|t| t.id == id);
+    let taken = |id: &str| agent.tools.iter().any(|t| t.id() == id);
     let mut id = wanted.to_string();
     let mut n = 1;
     while taken(&id) {

@@ -1,5 +1,7 @@
 //! The top of a MADL document: the system, its inputs and its groups.
-use super::{Agent, Channel, Communication, Connection, Extensions, Layout, Policies, Settings, Step, Topology};
+use super::{
+    Agent, Channel, Communication, Connection, Extensions, Layout, Policies, Settings, Step, Tool, Topology, Workflow,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -9,6 +11,10 @@ use ts_rs::TS;
 #[serde(deny_unknown_fields)]
 #[ts(export)]
 pub struct Document {
+    /// The document's JSON Schema, for editors that validate and complete it. It has no meaning.
+    #[serde(rename = "$schema", default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub schema: Option<String>,
     /// The spec revision this document is written against: `draft` or a dated revision.
     pub madl: String,
     pub system: System,
@@ -25,10 +31,18 @@ pub struct Document {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Agent>>", optional)]
     pub agents: Vec<Agent>,
+    /// Tools defined once and given to agents by id (MEP 0006).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<Tool>>", optional)]
+    pub tools: Vec<Tool>,
     /// Nodes that are not agents: checks, people's decisions, merges, fan-out and fan-in.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Step>>", optional)]
     pub steps: Vec<Step>,
+    /// Items passed through stages along outcome routes (MEP 0007).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<Workflow>>", optional)]
+    pub workflows: Vec<Workflow>,
     /// Where messages and artifacts travel: chats, folders, shared memory, buses and more.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Channel>>", optional)]

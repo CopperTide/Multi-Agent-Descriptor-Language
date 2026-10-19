@@ -1,0 +1,4 @@
+madl: draft
+system: { id: s, name: S }
+tools: [ { id: t, mcp: { command: x }, plugin: p@m } ]
+agents: [ { id: a, tools: [t] } ]

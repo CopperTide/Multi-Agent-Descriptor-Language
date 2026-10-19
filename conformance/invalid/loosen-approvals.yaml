@@ -1,0 +1,4 @@
+madl: draft
+system: { id: s, name: S }
+defaults: { restrictions: { approvals: { required_for: [shell] } } }
+agents: [ { id: a, settings: { restrictions: { approvals: { required_for: [] } } } } ]

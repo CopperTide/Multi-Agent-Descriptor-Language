@@ -10,7 +10,7 @@ fn examples() -> Vec<PathBuf> {
             let path = entry.unwrap().path();
             if path.is_dir() {
                 dirs.push(path);
-            } else if path.to_string_lossy().ends_with(".madl.yaml") {
+            } else if [".madl.yaml", ".madl.json"].iter().any(|e| path.to_string_lossy().ends_with(e)) {
                 out.push(path);
             }
         }
@@ -22,7 +22,7 @@ fn examples() -> Vec<PathBuf> {
 #[test]
 fn every_example_is_valid() {
     let files = examples();
-    assert!(files.len() >= 7, "examples went missing: {files:?}");
+    assert!(files.len() >= 8, "examples went missing: {files:?}");
     let mut problems = Vec::new();
     for file in files {
         match madl::load(&file) {

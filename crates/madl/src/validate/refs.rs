@@ -25,6 +25,7 @@ pub fn check(doc: &Document, index: &Index, report: &mut Report) {
     r.inputs_and_channels(doc);
     r.policies(doc);
     r.patterns(doc);
+    r.workflows(doc);
 }
 
 /// Letters, digits, `-` and `_`, starting with a letter or digit, at most 64 characters.
@@ -41,14 +42,14 @@ pub fn well_formed(id: &str, at: &str, report: &mut Report) {
     }
 }
 
-struct Refs<'a> {
-    index: &'a Index,
-    report: &'a mut Report,
+pub(super) struct Refs<'a> {
+    pub(super) index: &'a Index,
+    pub(super) report: &'a mut Report,
 }
 
 impl Refs<'_> {
     /// `id` must name one of `kinds` (`*` too, when `star`).
-    fn expect(&mut self, id: &str, at: String, kinds: &[Kind], star: bool) {
+    pub(super) fn expect(&mut self, id: &str, at: String, kinds: &[Kind], star: bool) {
         if star && id == "*" {
             return;
         }

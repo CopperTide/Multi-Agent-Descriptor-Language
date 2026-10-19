@@ -3,6 +3,7 @@
 export type Approvals = { 
 /**
  * Actions that need a person's approval first, e.g. `shell`, `network`,
- * `write-outside-workspace`, or a tool name.
+ * `write-outside-workspace`, `runtime-permissions` (whatever the agent's runtime asks permission
+ * for), or a tool name. An empty list says that nothing does, in place of the runner's own default.
  */
 required_for?: Array<string>, };

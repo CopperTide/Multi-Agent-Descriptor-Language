@@ -28,6 +28,8 @@ into the document after `$ref` resolution, for example `/agents/2/groups/0`.
 | **Document** | One MADL file (or several joined by `$ref`), describing one system |
 | **Agent** | A participant that acts: a model-driven agent, a remote agent, or a person |
 | **Step** | A node that is not an agent: a check, a person's decision, a merge, a fan-out or a fan-in |
+| **Tool** | What an agent is given beyond its instructions: an MCP server, a runtime's own tool, a hook on tool calls, a plugin or a pack of skills |
+| **Workflow** | Items split from an input and passed through **stages** along routes chosen by each stage's outcome |
 | **Node** | An agent or a step |
 | **Group** | A named set of agents with a shared purpose and settings |
 | **Settings block** | Preferences, restrictions and their reach, at the root, on a group, on an agent or for an agent's subagents |
@@ -37,10 +39,10 @@ into the document after `$ref` resolution, for example `/agents/2/groups/0`.
 
 ## Contents
 
-1. [Document](document.md): format, ids, `$ref`, the system, inputs, groups, agents, steps, layout, extensions
-2. [Settings](settings.md): preferences, restrictions, reach, subagents, resolution
+1. [Document](document.md): format, ids, `$ref`, the system, inputs, groups, agents, tools, steps, layout, extensions
+2. [Settings](settings.md): preferences, restrictions, runner settings, reach, subagents, resolution
 3. [Communication](communication.md): protocols, channels, connections, open and closed mode, bans
-4. [Topology](topology.md): the graph, patterns, starting points, loops, conditions, policies
+4. [Topology](topology.md): the graph, patterns, starting points, loops, workflows, conditions, policies
 5. [Conformance](conformance.md): levels, diagnostics, fixtures, security considerations
 6. [Interoperability](interop.md): Sculptured, CAMEL, A2A, Google ADK, Microsoft Agent Framework
 

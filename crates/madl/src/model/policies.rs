@@ -99,9 +99,14 @@ pub struct Layout {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[ts(as = "Option<BTreeMap<String, Point>>", optional)]
     pub nodes: BTreeMap<String, Point>,
+    /// When the document has a layout, a group without a box here is not drawn.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[ts(as = "Option<BTreeMap<String, Rect>>", optional)]
     pub groups: BTreeMap<String, Rect>,
+    /// Workflow stages, by workflow id and then stage id (MEP 0006).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(as = "Option<BTreeMap<String, BTreeMap<String, Point>>>", optional)]
+    pub stages: BTreeMap<String, BTreeMap<String, Point>>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]

@@ -6,6 +6,7 @@ mod limits;
 mod names;
 mod refs;
 mod shape;
+mod workflows;
 
 pub use flow::bans;
 pub use names::{MEDIUMS, RUNTIMES, is_protocol};
@@ -23,6 +24,7 @@ pub fn validate(doc: &Document) -> Report {
         limits::run_budget(b, "/system/budget", &mut report);
     }
     shape::check(doc, &mut report);
+    workflows::check(doc, &mut report);
     contracts::check(doc, &mut report);
     if !report.is_ok() {
         return report;

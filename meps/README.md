@@ -11,3 +11,6 @@ A MEP proposes a change to what a MADL document can say or means. The process is
 | [0003](0003-data-access-and-authority.md) | Data access, authority, and acceptance checks | Accepted into `draft` |
 | [0004](0004-embedded-skills.md) | Embedded skills | Accepted into `draft` |
 | [0005](0005-described-agents-and-start-inputs.md) | Agent descriptions, inputs given at start, and two more runtimes | Accepted into `draft` |
+| [0006](0006-shared-definitions.md) | Shared tools, a model per runtime, workspace defaults, shared values, call rules and a decision log | Accepted into `draft` |
+| [0007](0007-workflows.md) | Workflows | Accepted into `draft` |
+| [0008](0008-runner-settings.md) | Runner settings | Accepted into `draft` |

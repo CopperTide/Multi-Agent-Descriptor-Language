@@ -1,0 +1,17 @@
+# MEP 0006: an agent uses its runtime's entry in `models` unless a block at or after it sets `model`;
+# `models` and `workspace` merge key by key.
+madl: draft
+system: { id: models, name: Models }
+defaults:
+  preferences:
+    model: anthropic/claude-haiku-5-5
+    models: { claude-code: anthropic/claude-sonnet-5-5, codex: openai/gpt-6-sol }
+    workspace: { folder: ./project }
+groups:
+  - id: design
+    settings: { preferences: { models: { claude-code: anthropic/claude-opus-5-5 }, workspace: { copy: own } } }
+agents:
+  - { id: lead, groups: [design], runtime: claude-code }
+  - { id: builder, groups: [design], runtime: codex }
+  - { id: own, groups: [design], runtime: claude-code, model: anthropic/claude-fable-5-1 }
+  - { id: other, runtime: camel }

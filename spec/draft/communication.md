@@ -17,10 +17,13 @@ channels:
   - { id: shared, medium: filesystem, path: ./cad, access: { cad: read-write, reviewer: read } }
   - { id: findings, medium: bus, topic: findings }
   - { id: lead-desk, medium: human, reach: { slack: "#cad-review" } }
+  - { id: decisions, medium: decision-log }
 ```
 
 Mediums are `direct`, `filesystem`, `shared-memory`, `blackboard`, `bus`, `git`, `tracker`, `human`,
-or `x-<vendor>-<name>` (`unknown-medium`). `access` gives agents or groups `read`, `write` or
+`decision-log`, or `x-<vendor>-<name>` (`unknown-medium`). A `decision-log` channel is a record of
+decisions people make, which agents read before deciding something it covers; without `access`,
+people write it and every agent reads it ([MEP 0006](../../meps/0006-shared-definitions.md)). `access` gives agents or groups `read`, `write` or
 `read-write` rights; without it, a channel's members are the agents whose connections use it.
 
 ## Connections

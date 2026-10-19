@@ -1,6 +1,6 @@
 //! Settings blocks: preferences (override) and restrictions (only tighten), and how far each
 //! reaches.
-use super::Communication;
+use super::{Budget, Communication};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -64,6 +64,23 @@ pub struct Preferences {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub model: Option<ModelRef>,
+    /// A model for each runtime: an agent uses its runtime's entry unless a nearer block sets
+    /// `model`. Merged key by key down the chain (MEP 0006).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(as = "Option<BTreeMap<String, ModelRef>>", optional)]
+    pub models: BTreeMap<String, ModelRef>,
+    /// The agents' workspace unless their own `workspace` says otherwise (MEP 0006).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub workspace: Option<super::Workspace>,
+    /// How the runner keeps each agent's context small (MEP 0006).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub context: Option<super::ContextCare>,
+    /// Which of its runtime's own configuration an agent loads (MEP 0006).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub config: Option<super::RuntimeConfig>,
     /// The default protocol for communication: `native`, `a2a@<version>`, `mcp@<version>`, or
     /// `x-<vendor>-<name>[@<version>]`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -173,6 +190,10 @@ pub struct ToolRule {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<String>>", optional)]
     pub deny: Vec<String>,
+    /// Rules that refuse single calls; the first that matches refuses (MEP 0006).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<super::CallRule>>", optional)]
+    pub refuse: Vec<super::CallRule>,
 }
 
 /// Paths the agent may read and write, relative to the document. Absent: no limit.
@@ -212,44 +233,6 @@ pub enum EgressRule {
     Allow,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(deny_unknown_fields)]
-#[ts(export)]
-pub struct Budget {
-    /// Tokens of every kind. A bare number is the hard value; `{ soft, hard }` adds a soft one.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional, type = "super::Limit<number>")]
-    pub tokens: Option<super::Limit<u64>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub cost_usd: Option<f64>,
-    /// A duration such as `90s`, `30m`, `2h` or `1h30m`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub wall_clock: Option<super::Limit<String>>,
-    /// Turns (model replies to a message) in one run (MEP-0002).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional, type = "super::Limit<number>")]
-    pub turns: Option<super::Limit<u64>>,
-    /// Time spent working (in turns), as a duration (MEP-0002).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub working_time: Option<super::Limit<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub scope: Option<BudgetScope>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(rename_all = "kebab-case")]
-#[ts(export)]
-pub enum BudgetScope {
-    /// The agent and everything it spawns draw from one budget.
-    Shared,
-    /// Each agent has a budget of its own.
-    Own,
-}
-
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
 #[serde(deny_unknown_fields)]
 #[ts(export)]
@@ -272,8 +255,9 @@ pub struct Spawn {
 #[ts(export)]
 pub struct Approvals {
     /// Actions that need a person's approval first, e.g. `shell`, `network`,
-    /// `write-outside-workspace`, or a tool name.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[ts(as = "Option<Vec<String>>", optional)]
-    pub required_for: Vec<String>,
+    /// `write-outside-workspace`, `runtime-permissions` (whatever the agent's runtime asks permission
+    /// for), or a tool name. An empty list says that nothing does, in place of the runner's own default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub required_for: Option<Vec<String>>,
 }

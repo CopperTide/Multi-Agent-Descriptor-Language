@@ -13,4 +13,8 @@ wall_clock?: Limit<string>,
 /**
  * Most agents working at the same time; the rest wait for a free slot.
  */
-max_working?: number, };
+max_working?: number, 
+/**
+ * Most agents in the system at once, its own and the ones they spawn together (MEP 0006).
+ */
+max_agents?: number, };

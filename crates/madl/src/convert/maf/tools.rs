@@ -38,7 +38,7 @@ pub(super) fn add(b: &mut Builder, file: &File, agent: &mut Agent) -> Map<String
         }
         rules.filtered |= only.is_some();
         rules.allow.extend(only.unwrap_or_else(|| vec![id]));
-        agent.tools.push(tool);
+        agent.tools.push(tool.into());
     }
     rules.apply(agent);
     kept
@@ -60,10 +60,10 @@ impl Rules {
         let settings = agent.settings.get_or_insert_with(Settings::default);
         let restrictions = settings.restrictions.get_or_insert_with(Restrictions::default);
         if self.filtered {
-            restrictions.tools = Some(ToolRule { allow: Some(self.allow), deny: Vec::new() });
+            restrictions.tools = Some(ToolRule { allow: Some(self.allow), ..Default::default() });
         }
         if !self.approve.is_empty() {
-            restrictions.approvals = Some(Approvals { required_for: self.approve });
+            restrictions.approvals = Some(Approvals { required_for: Some(self.approve) });
         }
     }
 }
@@ -120,7 +120,7 @@ fn rest_of(t: &Value, also: &[&str]) -> Map<String, Value> {
 }
 
 fn free_tool_id(agent: &Agent, wanted: &str) -> String {
-    let taken = |id: &str| agent.tools.iter().any(|t| t.id == id);
+    let taken = |id: &str| agent.tools.iter().any(|t| t.id() == id);
     let mut id = wanted.to_string();
     let mut n = 1;
     while taken(&id) {

@@ -27,9 +27,8 @@ fn limits(acc: &mut Restrictions, new: &Restrictions, ctx: &mut Ctx) {
     if let Some(s) = &new.spawn {
         spawn(acc.spawn.get_or_insert_with(Default::default), s, ctx);
     }
-    if let Some(a) = &new.approvals {
-        let into = acc.approvals.get_or_insert_with(Default::default);
-        union(&mut into.required_for, &a.required_for, "restrictions.approvals.required_for", ctx);
+    if let Some(list) = new.approvals.as_ref().and_then(|a| a.required_for.as_ref()) {
+        approvals(acc.approvals.get_or_insert_with(Default::default), list, ctx);
     }
     if let Some(c) = &new.communication {
         communication(acc.communication.get_or_insert_with(Default::default), c, ctx);
@@ -53,6 +52,13 @@ fn tools(acc: &mut ToolRule, new: &ToolRule, ctx: &mut Ctx) {
         ctx.source(field);
     }
     union(&mut acc.deny, &new.deny, "restrictions.tools.deny", ctx);
+    let before = acc.refuse.len();
+    for rule in new.refuse.iter().filter(|r| !acc.refuse.contains(r)).cloned().collect::<Vec<_>>() {
+        acc.refuse.push(rule);
+    }
+    if acc.refuse.len() > before {
+        ctx.source("restrictions.tools.refuse");
+    }
 }
 
 fn union(acc: &mut Vec<String>, new: &[String], field: &str, ctx: &mut Ctx) {
@@ -117,6 +123,7 @@ fn egress(acc: &mut Option<Network>, new: &Egress, ctx: &mut Ctx) {
 
 fn budget(acc: &mut Budget, new: &Budget, ctx: &mut Ctx) {
     let f = "restrictions.budget";
+    counts(acc, new, ctx);
     min_limit(&mut acc.tokens, &new.tokens, &format!("{f}.tokens"), ctx, |v| *v as f64);
     min(&mut acc.cost_usd, &new.cost_usd, &format!("{f}.cost_usd"), ctx, |v| *v);
     min_limit(&mut acc.turns, &new.turns, &format!("{f}.turns"), ctx, |v| *v as f64);
@@ -200,5 +207,30 @@ fn communication(acc: &mut Communication, new: &Communication, ctx: &mut Ctx) {
     }
     if acc.deny.len() > before {
         ctx.source("restrictions.communication.deny");
+    }
+}
+
+/// `all` counts the most tokens, so it is the tightest; counting fewer is loosening.
+fn counts(acc: &mut Budget, new: &Budget, ctx: &mut Ctx) {
+    let Some(c) = new.counts else { return };
+    if acc.counts.unwrap_or(TokenCount::All) < c && acc.tokens.is_some() {
+        ctx.loosened("restrictions.budget.counts", "counts fewer tokens than an outer block's limit does");
+    } else {
+        acc.counts = Some(c);
+        ctx.source("restrictions.budget.counts");
+    }
+}
+
+/// Approvals add up. An empty list says nothing needs one, which only an outermost block may say.
+fn approvals(acc: &mut Approvals, list: &[String], ctx: &mut Ctx) {
+    let field = "restrictions.approvals.required_for";
+    let into = acc.required_for.get_or_insert_with(Vec::new);
+    if !list.is_empty() {
+        return union(into, list, field, ctx);
+    }
+    if into.is_empty() {
+        ctx.source(field);
+    } else {
+        ctx.loosened(field, "says nothing needs approval, but an outer block requires some");
     }
 }

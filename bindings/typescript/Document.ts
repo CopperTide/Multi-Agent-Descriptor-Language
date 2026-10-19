@@ -10,13 +10,19 @@ import type { Policies } from "./Policies";
 import type { Settings } from "./Settings";
 import type { Step } from "./Step";
 import type { System } from "./System";
+import type { Tool } from "./Tool";
 import type { Topology } from "./Topology";
+import type { Workflow } from "./Workflow";
 import type { JsonValue } from "./serde_json/JsonValue";
 
 /**
  * A MADL document after `$ref` resolution: one multi-agent system.
  */
 export type Document = { 
+/**
+ * The document's JSON Schema, for editors that validate and complete it. It has no meaning.
+ */
+$schema?: string, 
 /**
  * The spec revision this document is written against: `draft` or a dated revision.
  */
@@ -26,9 +32,17 @@ madl: string, system: System,
  */
 defaults?: Settings, inputs?: Array<Input>, groups?: Array<Group>, agents?: Array<Agent>, 
 /**
+ * Tools defined once and given to agents by id (MEP 0006).
+ */
+tools?: Array<Tool>, 
+/**
  * Nodes that are not agents: checks, people's decisions, merges, fan-out and fan-in.
  */
 steps?: Array<Step>, 
+/**
+ * Items passed through stages along outcome routes (MEP 0007).
+ */
+workflows?: Array<Workflow>, 
 /**
  * Where messages and artifacts travel: chats, folders, shared memory, buses and more.
  */

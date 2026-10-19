@@ -9,4 +9,12 @@ export type Layout = { units?: string,
 /**
  * Agents, steps and inputs, by id.
  */
-nodes?: { [key in string]: Point }, groups?: { [key in string]: Rect }, };
+nodes?: { [key in string]: Point }, 
+/**
+ * When the document has a layout, a group without a box here is not drawn.
+ */
+groups?: { [key in string]: Rect }, 
+/**
+ * Workflow stages, by workflow id and then stage id (MEP 0006).
+ */
+stages?: { [key in string]: { [key in string]: Point } }, };

@@ -1,0 +1,61 @@
+# MEP 0006: tools defined once and given by id, a model per runtime, workspace defaults, values
+# other agents rely on, rules that refuse calls, approvals, an agent cap and a decision log.
+$schema: https://raw.githubusercontent.com/Alexander-Aghili/Multi-Agent-Descriptor-Language/main/schema/draft/schema.json
+madl: draft
+system:
+  id: wing-team
+  name: Wing team
+  budget: { max_working: 2, max_agents: 6 }
+defaults:
+  preferences:
+    models: { claude-code: anthropic/claude-sonnet-5-5, codex: openai/gpt-6-sol }
+    workspace: { folder: ./project, copy: own }
+  restrictions:
+    approvals: { required_for: [runtime-permissions] }
+    tools:
+      refuse:
+        - name: no-force-push
+          tool: Bash
+          conditions: ["contains(parameters, 'push --force')"]
+          reason: Never force-push.
+groups:
+  - id: design
+    settings: { preferences: { models: { claude-code: anthropic/claude-opus-5-5 } } }
+tools:
+  - id: notes
+    name: Notes server
+    description: Shared notes.
+    instructions: Write what you learn with `note`.
+    mcp: { command: notes-mcp, args: [--stdio] }
+    install: cargo install notes-mcp
+  - id: docs
+    description: The project's documentation server.
+    mcp: { url: "https://docs.example.com/mcp", headers: { Authorization: "Bearer ${DOCS_TOKEN}" } }
+    requires: [notes]
+  - id: money
+    description: Rules for amounts of money.
+    skills: [ { name: money-rules, description: Use when handling amounts of money., body: Decimal only. } ]
+  - id: guard
+    description: A second check on every call.
+    hook: { command: signet-eval, args: [--rules-path, "{call_rules}"] }
+    runtimes: [claude-code]
+  - id: review-plugin
+    description: Review commands.
+    plugin: review@acme
+    runtimes: [claude-code]
+channels:
+  - { id: decisions, medium: decision-log }
+agents:
+  - id: wing
+    groups: [design]
+    runtime: claude-code
+    tools: [notes, docs, money, guard, review-plugin]
+    data_access:
+      writes: [cad/wings/]
+      shared: [ { name: spar count, value: SPARS = 2, file: cad/wings/params.py } ]
+  - id: build
+    runtime: codex
+    workspace: { folder: ./build }
+    tools: [notes, { id: search, builtin: "codex:web_search" }]
+connections:
+  - { from: wing, to: build, kind: handoff }

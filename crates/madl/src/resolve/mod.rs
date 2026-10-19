@@ -76,43 +76,51 @@ pub fn resolve(doc: &Document) -> Resolved {
 /// The agent's own settings, and those an agent it spawns would get.
 fn agent_settings(doc: &Document, i: usize, diagnostics: &mut Vec<Diagnostic>) -> (Effective, Effective) {
     let blocks = chain::for_agent(doc, i);
-    let settings = apply(&blocks, &[Reach::Itself, Reach::Descendants], diagnostics);
+    let (mut settings, own) = apply(&blocks, &[Reach::Itself, Reach::Descendants], diagnostics);
+    prefs::runtime_model(&mut settings, &own.iter().collect::<Vec<_>>());
     let passes = |r: Reach| matches!(r, Reach::Subagents | Reach::Descendants);
     let reaching: Vec<Block> =
         blocks.into_iter().filter(|b| passes(b.preference_reach()) || passes(b.restriction_reach())).collect();
-    let inherited = apply(&reaching, &[Reach::Subagents, Reach::Descendants], diagnostics);
-    let mut subagents = apply_into(inherited, &chain::for_subagents(doc, i), diagnostics);
+    let (inherited, mut applied) = apply(&reaching, &[Reach::Subagents, Reach::Descendants], diagnostics);
+    let (mut subagents, more) = apply_into(inherited, &chain::for_subagents(doc, i), diagnostics);
+    applied.extend(more);
     same_runtime(&settings, &mut subagents);
+    prefs::runtime_model(&mut subagents, &applied.iter().collect::<Vec<_>>());
     one_level_down(&mut subagents);
     (settings, subagents)
 }
 
-fn apply(blocks: &[Block], reaches: &[Reach], diagnostics: &mut Vec<Diagnostic>) -> Effective {
+/// The effective settings, and the preferences that applied, in order.
+fn apply(blocks: &[Block], reaches: &[Reach], diagnostics: &mut Vec<Diagnostic>) -> (Effective, Vec<Preferences>) {
     let mut e = Effective::default();
+    let mut applied = Vec::new();
     for block in blocks {
         let mut ctx = Ctx { origin: &block.origin, sources: &mut e.sources, diagnostics };
         if let Some(p) = block.settings.preferences.as_ref().filter(|_| reaches.contains(&block.preference_reach())) {
             prefs::merge(&mut e.preferences, p, &mut ctx);
+            applied.push(p.clone());
         }
         if let Some(r) = block.settings.restrictions.as_ref().filter(|_| reaches.contains(&block.restriction_reach())) {
             tighten::apply(&mut e.restrictions, r, &mut ctx);
         }
     }
-    e
+    (e, applied)
 }
 
 /// Apply blocks meant only for subagents: all of each block applies.
-fn apply_into(mut e: Effective, blocks: &[Block], diagnostics: &mut Vec<Diagnostic>) -> Effective {
+fn apply_into(mut e: Effective, blocks: &[Block], diagnostics: &mut Vec<Diagnostic>) -> (Effective, Vec<Preferences>) {
+    let mut applied = Vec::new();
     for block in blocks {
         let mut ctx = Ctx { origin: &block.origin, sources: &mut e.sources, diagnostics };
         if let Some(p) = &block.settings.preferences {
             prefs::merge(&mut e.preferences, p, &mut ctx);
+            applied.push(p.clone());
         }
         if let Some(r) = &block.settings.restrictions {
             tighten::apply(&mut e.restrictions, r, &mut ctx);
         }
     }
-    e
+    (e, applied)
 }
 
 /// A spawned agent runs on its parent's runtime unless something says otherwise.

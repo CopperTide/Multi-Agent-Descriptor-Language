@@ -1,0 +1,45 @@
+# MEP 0007: a dispatcher splits the input into items; each passes through stages along the routes
+# its outcomes choose.
+madl: draft
+system: { id: book, name: Book }
+inputs:
+  - { id: topic, to: [editor] }
+agents:
+  - { id: editor, runtime: claude-code }
+  - { id: writer, runtime: claude-code }
+  - { id: writer-2, runtime: claude-code }
+  - { id: senior, runtime: claude-code, model: anthropic/claude-opus-5-5 }
+  - { id: critic, runtime: claude-code }
+  - { id: fact-checker, runtime: codex }
+workflows:
+  - id: chapters
+    input: topic
+    dispatcher: editor
+    entry: draft
+    collector: editor
+    max_items: 12
+    max_steps: 20            # per item
+    copies: per-item
+    stages:
+      - id: draft
+        name: Draft
+        agent: writer
+        workers: [writer-2]
+        routes: { done: review }
+        max_rounds: 3
+        on_limit: sign-off
+        escalate: { after_rounds: 2, to: senior }
+      - id: review
+        reviewers: [critic, fact-checker]
+        personas: { critic: simplifier, fact-checker: expert }
+        join: all
+        priority: [blocked, changes, approved]
+        routes: { approved: verify, changes: draft }
+      - { id: verify, kind: check, command: make check, timeout_s: 600, routes: { passed: sign-off, failed: draft } }
+      - { id: sign-off, kind: human, prompt: Publish this chapter?, routes: { "yes": merge, "no": draft } }
+      - { id: merge, kind: merge, into: main, routes: { merged: null } }
+policies:
+  guards: [ { command: make health, every: 10m } ]
+layout:
+  nodes: { topic: { x: -240, y: 40 } }
+  stages: { chapters: { draft: { x: 300, y: 40 }, verify: { x: 600, y: 40 } } }

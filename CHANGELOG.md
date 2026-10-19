@@ -4,6 +4,24 @@
 
 The first public draft.
 
+- MEP 0008: runner settings: `preferences.context` (large reads, tool output, a fresh context past a
+  size, or `managed: false`), `preferences.config` (the runtime's user and project configuration),
+  `restrictions.budget.counts` (`all`, `new`, `output`) and `system.budget.plan[].pause`
+  (`continue_with`, `max_windows`). New code `budget-no-windows`.
+
+- MEP 0007: `workflows`: a dispatcher splits an input into items that pass through `agent`, review
+  panel, `check`, `human` and `merge` stages along outcome routes, with round limits, `on_limit`,
+  escalation, `max_items`, `max_steps` and per-item copies; `layout.stages`; `madl graph` draws them.
+  New code `stage-field`.
+
+- MEP 0006: top-level `tools` given to agents by id, with `hook`, `plugin` and `skills` tools,
+  `headers`, `instructions`, `runtimes`, `requires`, `install` and `homepage`; `preferences.models`
+  (a model per runtime) and `preferences.workspace`; `data_access.shared`;
+  `restrictions.tools.refuse` (call rules in Signet-Eval's condition language); the approval
+  `runtime-permissions` and an explicit empty list; `system.budget.max_agents`; the medium
+  `decision-log`; `$schema`; examples may be `.madl.json`. New code `tool-shape`. In the Rust and
+  TypeScript types `Agent.tools` holds `ToolRef` and `Approvals.required_for` is optional.
+
 - `madl import maf`: builds a document from Microsoft Agent Framework declarative files (a workflow,
   the `kind: Prompt` agents it invokes, or Prompt agents alone) without running them: a `handoff`
   from each agent to every agent the workflow can run next, with the branch conditions, variables

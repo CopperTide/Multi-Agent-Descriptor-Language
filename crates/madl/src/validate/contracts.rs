@@ -24,7 +24,11 @@ fn scopes(doc: &Document, report: &mut Report) {
             && scope != "system"
             && !doc.groups.iter().any(|g| g.id == scope)
         {
-            report.push(Diagnostic::error("unknown-reference", format!("/agents/{i}/authority/scope"), format!("`{scope}` is not a group (or `system`)")));
+            report.push(Diagnostic::error(
+                "unknown-reference",
+                format!("/agents/{i}/authority/scope"),
+                format!("`{scope}` is not a group (or `system`)"),
+            ));
         }
     }
 }

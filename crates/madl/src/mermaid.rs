@@ -1,7 +1,7 @@
 //! A Mermaid flowchart of a document: groups as boxes, agents, steps and inputs as nodes, one
-//! arrow style per connection kind.
+//! arrow style per connection kind; each workflow as a box of stages joined by their routes.
 use crate::expand::kind_name;
-use crate::model::{ConnectionKind, Direction, Document, StepKind};
+use crate::model::{ConnectionKind, Direction, Document, Stage, StageKind, StepKind, Workflow};
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
@@ -25,6 +25,7 @@ pub fn flowchart(doc: &Document) -> String {
         agent_line(doc, &rt, &a.id, 1, &mut out);
     }
     steps(doc, &mut out);
+    workflows(doc, &mut out);
     arrows(doc, &mut out);
     bans(doc, &mut out);
     out
@@ -133,5 +134,40 @@ fn first_line(text: &str) -> String {
         format!("{}…", line.chars().take(40).collect::<String>())
     } else {
         line.to_string()
+    }
+}
+
+/// Each workflow as a box of its stages: the dispatcher hands items to the entry stage, routes are
+/// labelled with their outcome, and a completed item goes to the collector.
+fn workflows(doc: &Document, out: &mut String) {
+    for w in &doc.workflows {
+        let _ = writeln!(out, "  subgraph {}[\"{}\"]", node(&w.id), label(w.name.as_deref().unwrap_or(&w.id)));
+        for s in &w.stages {
+            let _ = writeln!(out, "    {}{}", stage_node(w, &s.id), stage_shape(s));
+        }
+        let _ = writeln!(out, "  end");
+        let _ = writeln!(out, "  {} ==>|items| {}", node(&w.dispatcher), stage_node(w, &w.entry));
+        for s in &w.stages {
+            for (outcome, next) in &s.routes {
+                let to = next.as_deref().map_or_else(|| node(&w.collector), |n| stage_node(w, n));
+                let _ = writeln!(out, "  {} -->|{}| {to}", stage_node(w, &s.id), label(outcome));
+            }
+        }
+    }
+}
+
+fn stage_node(w: &Workflow, stage: &str) -> String {
+    node(&format!("{}__{stage}", w.id))
+}
+
+fn stage_shape(s: &Stage) -> String {
+    let who = s.agent.iter().chain(&s.workers).chain(&s.reviewers).cloned().collect::<Vec<_>>().join(", ");
+    let name = label(s.name.as_deref().unwrap_or(&s.id));
+    let text = if who.is_empty() { name } else { format!("{name}<br/><small>{}</small>", label(&who)) };
+    match s.kind.unwrap_or(StageKind::Agent) {
+        StageKind::Agent => format!("[\"{text}\"]"),
+        StageKind::Check => format!("{{{{\"{text}\"}}}}"),
+        StageKind::Human => format!("[/\"{text}\"/]"),
+        StageKind::Merge => format!("[[\"{text}\"]]"),
     }
 }

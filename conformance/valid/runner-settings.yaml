@@ -1,0 +1,22 @@
+# MEP 0008: how much reaches an agent's context, which of its runtime's own configuration it
+# loads, how tokens count toward its limit, and pausing at a plan share.
+madl: draft
+system:
+  id: c172
+  name: C172 model
+  budget:
+    plan:
+      - { provider: claude, window: five_hour, hard: 30, pause: { continue_with: resume, max_windows: 2 } }
+defaults:
+  preferences:
+    context: { read_max_kb: 200, tool_output_chars: 4000, refresh_at_tokens: 80000 }
+    config: { user: false, project: true }
+agents:
+  - id: parser
+    runtime: claude-code
+    settings:
+      restrictions:
+        budget: { tokens: { soft: 1000000, hard: 2000000 }, counts: output }
+  - id: free
+    runtime: codex
+    settings: { preferences: { context: { managed: false } } }

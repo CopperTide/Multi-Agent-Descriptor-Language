@@ -4,4 +4,8 @@ import type { EnvValue } from "./EnvValue";
 /**
  * How to reach an MCP server: a command to start (stdio) or a URL (HTTP).
  */
-export type McpServer = { command?: string, args?: Array<string>, env?: { [key in string]: EnvValue }, url?: string, };
+export type McpServer = { command?: string, args?: Array<string>, env?: { [key in string]: EnvValue }, url?: string, 
+/**
+ * HTTP request headers. `${NAME}` in a value (or in `url`) is a secret the runner fills in.
+ */
+headers?: { [key in string]: string }, };

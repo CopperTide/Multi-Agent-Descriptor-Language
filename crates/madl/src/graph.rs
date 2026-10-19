@@ -1,6 +1,6 @@
 //! The document as a graph of agents and steps: groups become their members, `both` becomes two
 //! directions.
-use crate::model::{ConnectionKind, Direction, Document};
+use crate::model::{ConnectionKind, Direction, Document, Stage, Workflow};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -50,11 +50,14 @@ pub fn carries_work(kind: ConnectionKind) -> bool {
 /// to. People (`runtime: human`) start only when an input names them.
 pub fn starting_agents(doc: &Document) -> BTreeSet<String> {
     let edges = edges(doc);
-    let fed: BTreeSet<&str> = edges
+    let mut fed: BTreeSet<&str> = edges
         .iter()
         .filter(|e| matches!(e.kind, ConnectionKind::Handoff | ConnectionKind::Delegate))
         .map(|e| e.to.as_str())
         .collect();
+    for w in &doc.workflows {
+        fed.extend(workflow_agents(w).into_iter().filter(|a| *a != w.dispatcher));
+    }
     let mut out: BTreeSet<String> =
         doc.inputs.iter().flat_map(|i| i.to.iter().flat_map(|t| nodes_of(doc, t))).collect();
     let human = |id: &str| doc.agents.iter().any(|a| a.id == id && a.runtime.as_deref() == Some("human"));
@@ -73,6 +76,11 @@ pub fn reachable(doc: &Document, starts: &BTreeSet<String>) -> BTreeSet<String> 
     for e in edges.iter().filter(|e| carries_work(e.kind) || e.kind == ConnectionKind::Report) {
         next.entry(e.from.as_str()).or_default().push(e.to.as_str());
     }
+    for w in &doc.workflows {
+        let mut team = workflow_agents(w);
+        team.push(&w.collector);
+        next.entry(w.dispatcher.as_str()).or_default().extend(team);
+    }
     let mut seen: BTreeSet<String> = starts.clone();
     let mut queue: Vec<String> = starts.iter().cloned().collect();
     while let Some(n) = queue.pop() {
@@ -83,4 +91,14 @@ pub fn reachable(doc: &Document, starts: &BTreeSet<String>) -> BTreeSet<String> 
         }
     }
     seen
+}
+
+/// The agents that do a workflow's stages: each stage's agent, workers, reviewers and escalation.
+pub fn workflow_agents(w: &Workflow) -> Vec<&str> {
+    w.stages.iter().flat_map(stage_agents).collect()
+}
+
+fn stage_agents(s: &Stage) -> Vec<&str> {
+    let lists = s.workers.iter().chain(&s.reviewers).map(String::as_str);
+    s.agent.as_deref().into_iter().chain(lists).chain(s.escalate.as_ref().map(|e| e.to.as_str())).collect()
 }

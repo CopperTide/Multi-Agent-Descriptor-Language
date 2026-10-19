@@ -7,8 +7,8 @@
 
 MADL is an open, vendor-neutral file format for describing a **multi-agent system**: its agents,
 how they are grouped, who may talk to whom and how, the shape of the work, the settings each agent
-runs with, and the restrictions it runs under. One MADL file can be validated, drawn, compared,
-shared and run by any tool that implements it.
+runs with, and the restrictions it runs under. One MADL file, written in YAML or JSON, can be
+validated, drawn, compared, shared and run by any tool that implements it.
 
 MADL describes systems; it does not move messages. Agents talk over protocols such as
 [A2A](https://a2a-protocol.org) and reach tools over [MCP](https://modelcontextprotocol.io); a MADL
@@ -51,12 +51,14 @@ communication:
 | | |
 |---|---|
 | **Participants** | Agents on any runtime (Claude Code, Codex, CAMEL, CrewAI, LangGraph, OpenAI Agents, remote A2A agents), people, and steps such as checks, approvals, merges, fan-out and fan-in |
+| **Tools** | MCP servers, a runtime's own tools, hooks on tool calls, plugins and packs of skills, defined once and given to agents by id, with how to install them |
 | **Groups** | Named sets of agents with a shared purpose and shared settings; groups nest |
 | **Contracts** | What each agent reads, writes and otherwise changes (`data_access`), the decisions it owns (`authority`), and acceptance checks that decide when an output is done. Overlapping writes or decisions are flagged |
-| **Settings** | Global `defaults`, overridden per group and per agent. **Preferences** (model, runtime, protocol…) override; **restrictions** (tools, files, network, budgets, spawning, approvals, communication) only tighten. Each block says whether it reaches the agents an agent spawns |
+| **Settings** | Global `defaults`, overridden per group and per agent. **Preferences** (runtime, a model per runtime, workspace, protocol, how the runner keeps context small…) override; **restrictions** (tools and rules that refuse single calls, files, network, budgets, spawning, approvals, communication) only tighten. Each block says whether it reaches the agents an agent spawns |
 | **Communication** | Channels (direct chat, shared folder, shared memory, blackboard, bus, git, tracker, human) and connections with their kind, direction, protocol, initiator, sync mode, contents, round limit and condition; open or closed mode with bans |
 | **Topology** | An explicit graph, or patterns (pipeline, supervisor, committee, debate, role-play, auction, swarm, blackboard) that expand into one; loops are allowed when work can reach them |
-| **Policies** | Failure handling (retry, replan, decompose, escalate), escalation, schedules, guards |
+| **Workflows** | Items split from an input and passed through agent, review-panel, check, sign-off and merge stages along routes chosen by each outcome, with round limits and escalation |
+| **Policies** | Failure handling (retry, replan, decompose, escalate), escalation, schedules, guards; budgets for the whole run |
 | **Layout** | Optional positions so every tool draws the system the same way |
 | **Extensions** | Reverse-DNS namespaces for what one tool needs and others may ignore |
 
@@ -65,9 +67,9 @@ communication:
 ```sh
 cargo install --git https://github.com/Alexander-Aghili/Multi-Agent-Descriptor-Language madl-cli
 
-madl validate team.madl.yaml      # schema + rules, with stable error codes and JSON Pointer paths
+madl validate team.madl.yaml      # schema + rules, with stable error codes and JSON Pointer paths (YAML or JSON)
 madl resolve  team.madl.yaml      # every agent's effective settings, and where each value came from
-madl expand   team.madl.yaml      # $refs resolved, patterns expanded
+madl expand   team.madl.yaml      # $refs resolved, patterns expanded (--json for JSON)
 madl graph    team.madl.yaml      # a Mermaid flowchart
 madl import adk ./my_agent        # a Google ADK agent config tree as MADL, with what did not carry over
 madl import maf ./workflow        # Microsoft Agent Framework declarative files as MADL, the same way
@@ -82,8 +84,8 @@ let report = madl::validate(&doc);
 let settings = madl::resolve(&madl::expand(&doc));
 ```
 
-Editors can validate and complete MADL files with the published schema:
-[`schema/draft/schema.json`](schema/draft/schema.json).
+Editors can validate and complete MADL files with the published schema,
+[`schema/draft/schema.json`](schema/draft/schema.json): name it in a JSON document's `$schema`.
 
 ## Repository
 
@@ -91,7 +93,7 @@ Editors can validate and complete MADL files with the published schema:
 |---|---|
 | [`spec/draft/`](spec/draft/index.md) | The specification (normative) |
 | [`schema/draft/schema.json`](schema/draft/schema.json) | JSON Schema, generated from the Rust types |
-| [`examples/`](examples) | Pipeline, supervisor workforce, debate, CAD review, textbook fan-out, open team with bans, a document split across files |
+| [`examples/`](examples) | Pipeline, supervisor workforce, debate, CAD review, textbook fan-out, a book workflow in JSON, open team with bans, a document split across files |
 | [`conformance/`](conformance) | Valid and invalid documents with expected error codes, and expected resolver and expander output; every implementation runs them |
 | [`crates/madl`](crates/madl) | The reference implementation: types, loader, validator, resolver, expander, Mermaid, importers (Google ADK, Microsoft Agent Framework) |
 | [`crates/madl-cli`](crates/madl-cli) | The `madl` command |
@@ -100,7 +102,7 @@ Editors can validate and complete MADL files with the published schema:
 
 ## Implementations
 
-- **[Sculptured](https://github.com/Alexander-Aghili/Sculptured)** exports any team as MADL and imports MADL files as teams.
+- **[Sculptured](https://github.com/Alexander-Aghili/Sculptured)** keeps its teams as MADL: it exports any team as `.madl.json` and imports MADL files in JSON or YAML as teams.
 
 Python and TypeScript packages and a CAMEL adapter are planned; they will call the Rust core so
 their behaviour cannot drift from the spec's fixtures.

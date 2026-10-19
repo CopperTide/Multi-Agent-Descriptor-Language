@@ -1,0 +1,4 @@
+madl: draft
+system: { id: s, name: S }
+defaults: { preferences: { models: { claude: anthropic/claude-opus-5-5 } } }
+agents: [ { id: a } ]

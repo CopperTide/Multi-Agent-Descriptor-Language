@@ -1,5 +1,5 @@
 //! Agents and what they are given: tools, workspace, checks, subagents.
-use super::{Extensions, ModelRef, Resume, Settings};
+use super::{Extensions, ModelRef, Resume, Settings, ToolRef};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -43,10 +43,10 @@ pub struct Agent {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<String>>", optional)]
     pub groups: Vec<String>,
-    /// Tools the agent is given. Restrictions decide which of them it may use.
+    /// Tools the agent is given, or ids of the document's `tools`. Restrictions decide which it may use.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[ts(as = "Option<Vec<Tool>>", optional)]
-    pub tools: Vec<Tool>,
+    #[ts(as = "Option<Vec<ToolRef>>", optional)]
+    pub tools: Vec<ToolRef>,
     /// Skills: a path or name, or the skill itself embedded (`{ name, description, body }`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<SkillRef>>", optional)]
@@ -88,60 +88,6 @@ pub struct Agent {
     #[serde(default, skip_serializing_if = "Extensions::is_empty")]
     #[ts(as = "Option<Extensions>", optional)]
     pub extensions: Extensions,
-}
-
-/// A tool: an MCP server, or one of the runtime's built-in tools.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(deny_unknown_fields)]
-#[ts(export)]
-pub struct Tool {
-    pub id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub mcp: Option<McpServer>,
-    /// A runtime's own tool, as `<runtime>:<name>`, e.g. `claude-code:Bash`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub builtin: Option<String>,
-}
-
-/// How to reach an MCP server: a command to start (stdio) or a URL (HTTP).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(deny_unknown_fields)]
-#[ts(export)]
-pub struct McpServer {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub command: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[ts(as = "Option<Vec<String>>", optional)]
-    pub args: Vec<String>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[ts(as = "Option<BTreeMap<String, EnvValue>>", optional)]
-    pub env: BTreeMap<String, EnvValue>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub url: Option<String>,
-}
-
-/// A value given as text, or a secret the runner resolves. Secrets never appear in documents.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(untagged)]
-#[ts(export)]
-pub enum EnvValue {
-    Text(String),
-    Secret(SecretRef),
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(deny_unknown_fields)]
-#[ts(export)]
-pub struct SecretRef {
-    /// The secret's name in the runner's secret store.
-    pub secret: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
@@ -215,6 +161,21 @@ pub struct DataAccess {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub rationale: Option<String>,
+    /// Values other agents rely on, each with the file that must contain it (MEP 0006).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<SharedValue>>", optional)]
+    pub shared: Vec<SharedValue>,
+}
+
+/// A value at a boundary between agents, such as a port, an endpoint or a field name, and the file
+/// (relative to the document) that must contain it exactly. A Runner SHOULD check it at each start.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(export)]
+pub struct SharedValue {
+    pub name: String,
+    pub value: String,
+    pub file: String,
 }
 
 /// The decisions an agent owns, as domains in plain words ("wing geometry", "release dates").
@@ -284,8 +245,8 @@ pub struct SubagentTemplate {
     #[ts(optional)]
     pub model: Option<ModelRef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[ts(as = "Option<Vec<Tool>>", optional)]
-    pub tools: Vec<Tool>,
+    #[ts(as = "Option<Vec<ToolRef>>", optional)]
+    pub tools: Vec<ToolRef>,
 }
 
 /// A skill given to an agent: by path or name, or embedded so the document carries it (MEP 0004).

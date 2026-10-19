@@ -9,7 +9,7 @@ import type { Resume } from "./Resume";
 import type { Settings } from "./Settings";
 import type { SkillRef } from "./SkillRef";
 import type { Subagents } from "./Subagents";
-import type { Tool } from "./Tool";
+import type { ToolRef } from "./ToolRef";
 import type { Workspace } from "./Workspace";
 import type { JsonValue } from "./serde_json/JsonValue";
 
@@ -47,9 +47,9 @@ endpoint?: string,
  */
 groups?: Array<string>, 
 /**
- * Tools the agent is given. Restrictions decide which of them it may use.
+ * Tools the agent is given, or ids of the document's `tools`. Restrictions decide which it may use.
  */
-tools?: Array<Tool>, 
+tools?: Array<ToolRef>, 
 /**
  * Skills: a path or name, or the skill itself embedded (`{ name, description, body }`).
  */

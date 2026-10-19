@@ -1,0 +1,134 @@
+{
+  "agents": [
+    {
+      "id": "lead",
+      "preferences": {
+        "model": "anthropic/claude-opus-5-5",
+        "models": {
+          "claude-code": "anthropic/claude-opus-5-5",
+          "codex": "openai/gpt-6-sol"
+        },
+        "runtime": "claude-code",
+        "workspace": {
+          "copy": "own",
+          "folder": "./project"
+        }
+      },
+      "restrictions": {},
+      "sources": {
+        "preferences.model": "/groups/0/settings/preferences/models/claude-code",
+        "preferences.models.claude-code": "/groups/0/settings/preferences/models/claude-code",
+        "preferences.models.codex": "/defaults/preferences/models/codex",
+        "preferences.runtime": "/agents/0/runtime",
+        "preferences.workspace.copy": "/groups/0/settings/preferences/workspace/copy",
+        "preferences.workspace.folder": "/defaults/preferences/workspace/folder"
+      },
+      "subagents": {
+        "preferences": {
+          "runtime": "claude-code"
+        },
+        "restrictions": {},
+        "sources": {
+          "preferences.runtime": "/agents/0/runtime"
+        }
+      }
+    },
+    {
+      "id": "builder",
+      "preferences": {
+        "model": "openai/gpt-6-sol",
+        "models": {
+          "claude-code": "anthropic/claude-opus-5-5",
+          "codex": "openai/gpt-6-sol"
+        },
+        "runtime": "codex",
+        "workspace": {
+          "copy": "own",
+          "folder": "./project"
+        }
+      },
+      "restrictions": {},
+      "sources": {
+        "preferences.model": "/defaults/preferences/models/codex",
+        "preferences.models.claude-code": "/groups/0/settings/preferences/models/claude-code",
+        "preferences.models.codex": "/defaults/preferences/models/codex",
+        "preferences.runtime": "/agents/1/runtime",
+        "preferences.workspace.copy": "/groups/0/settings/preferences/workspace/copy",
+        "preferences.workspace.folder": "/defaults/preferences/workspace/folder"
+      },
+      "subagents": {
+        "preferences": {
+          "runtime": "codex"
+        },
+        "restrictions": {},
+        "sources": {
+          "preferences.runtime": "/agents/1/runtime"
+        }
+      }
+    },
+    {
+      "id": "own",
+      "preferences": {
+        "model": "anthropic/claude-fable-5-1",
+        "models": {
+          "claude-code": "anthropic/claude-opus-5-5",
+          "codex": "openai/gpt-6-sol"
+        },
+        "runtime": "claude-code",
+        "workspace": {
+          "copy": "own",
+          "folder": "./project"
+        }
+      },
+      "restrictions": {},
+      "sources": {
+        "preferences.model": "/agents/2/model",
+        "preferences.models.claude-code": "/groups/0/settings/preferences/models/claude-code",
+        "preferences.models.codex": "/defaults/preferences/models/codex",
+        "preferences.runtime": "/agents/2/runtime",
+        "preferences.workspace.copy": "/groups/0/settings/preferences/workspace/copy",
+        "preferences.workspace.folder": "/defaults/preferences/workspace/folder"
+      },
+      "subagents": {
+        "preferences": {
+          "runtime": "claude-code"
+        },
+        "restrictions": {},
+        "sources": {
+          "preferences.runtime": "/agents/2/runtime"
+        }
+      }
+    },
+    {
+      "id": "other",
+      "preferences": {
+        "model": "anthropic/claude-haiku-5-5",
+        "models": {
+          "claude-code": "anthropic/claude-sonnet-5-5",
+          "codex": "openai/gpt-6-sol"
+        },
+        "runtime": "camel",
+        "workspace": {
+          "folder": "./project"
+        }
+      },
+      "restrictions": {},
+      "sources": {
+        "preferences.model": "/defaults/preferences/model",
+        "preferences.models.claude-code": "/defaults/preferences/models/claude-code",
+        "preferences.models.codex": "/defaults/preferences/models/codex",
+        "preferences.runtime": "/agents/3/runtime",
+        "preferences.workspace.folder": "/defaults/preferences/workspace/folder"
+      },
+      "subagents": {
+        "preferences": {
+          "runtime": "camel"
+        },
+        "restrictions": {},
+        "sources": {
+          "preferences.runtime": "/agents/3/runtime"
+        }
+      }
+    }
+  ]
+}

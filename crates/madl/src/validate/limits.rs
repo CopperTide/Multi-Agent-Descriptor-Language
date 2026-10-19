@@ -41,6 +41,13 @@ pub fn budget(b: &Budget, at: &str, report: &mut Report) {
 }
 
 fn plan(p: &PlanShare, at: &str, report: &mut Report) {
+    if p.pause.is_some_and(|x| x.max_windows == Some(0)) {
+        report.push(Diagnostic::error(
+            "budget-no-windows",
+            format!("{at}/pause/max_windows"),
+            "a paused run continues for at least one window",
+        ));
+    }
     let ok = |v: f64| v.is_finite() && v > 0.0 && v <= 100.0;
     if !ok(p.hard) || p.soft.is_some_and(|s| !ok(s)) {
         report.push(Diagnostic::error(
@@ -60,11 +67,10 @@ pub fn run_budget(b: &RunBudget, at: &str, report: &mut Report) {
     tokens(&b.tokens, &format!("{at}/tokens"), report);
     number(&b.cost_usd, &format!("{at}/cost_usd"), report);
     time(&b.wall_clock, &format!("{at}/wall_clock"), report);
-    if b.max_working == Some(0) {
-        report.push(Diagnostic::error(
-            "budget-no-room",
-            format!("{at}/max_working"),
-            "at least one agent must be able to work",
-        ));
+    for (field, value) in [("max_working", b.max_working), ("max_agents", b.max_agents)] {
+        if value == Some(0) {
+            let why = "at least one agent must be able to work";
+            report.push(Diagnostic::error("budget-no-room", format!("{at}/{field}"), why));
+        }
     }
 }

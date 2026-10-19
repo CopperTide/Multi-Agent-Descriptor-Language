@@ -4,26 +4,34 @@ These mappings are informative.
 
 ## Sculptured
 
-[Sculptured](https://github.com/Alexander-Aghili/Sculptured) exports teams as MADL and imports MADL
-documents as teams; an exported team imported again is unchanged.
+[Sculptured](https://github.com/Alexander-Aghili/Sculptured) keeps every team as a MADL document: it exports
+teams as `.madl.json` (or YAML), imports either form, and an exported team imported again is
+unchanged. Everything that describes a team is in core MADL; what changes while a team runs
+(progress, work items, budgets used, questions and answers) stays in Sculptured.
 
-| Sculptured team file | MADL |
+| Sculptured | MADL |
 |---|---|
-| team `id`, `name` | `system.id`, `system.name` |
-| agent `kind`: `claude`, `codex` | `runtime: claude-code`, `codex` |
-| agent `job` | `instructions` |
-| agent `folder` | `workspace.folder` |
-| models: agent, group, team (per kind) | each agent's effective `model`, as `provider/model`; group and team defaults in `com.usesculptured` |
-| `token_limit { tokens, include_subagents }` | `settings.restrictions.budget { tokens, scope: shared \| own }` |
-| `check` | `checks: [ { command, after: each-turn } ]` |
+| team id, name | `system.id`, `system.name` |
+| agent kind: Claude Code, Codex, Practice | `runtime: claude-code`, `codex`, `x-sculptured-practice` |
+| agent Job | `instructions` |
+| agent folder; the team's folder; own copies | `workspace.folder`; `defaults.preferences.workspace.folder`; `defaults.preferences.workspace.copy: own` |
+| models: agent; group and team (per kind) | the agent's `model`; `preferences.models` on the group and in `defaults`, as `provider/model` |
+| token, turn and working-time limits | `settings.restrictions.budget { tokens, counts, turns, working_time, scope }` |
+| run budget, plan pauses, most agents at once | `system.budget`, with `plan[].pause` and `max_agents` |
+| restricted permissions (team or agent) | `restrictions.approvals.required_for: [runtime-permissions]`; an unrestricted team: `[]` |
+| question timeout | `defaults.preferences.questions.timeout` |
+| protections; Claude Code setup | `defaults.preferences.context`; `defaults.preferences.config` |
+| safety rules | `defaults.restrictions.tools.refuse` |
+| components; an agent's components | `tools`; the agent's `tools`, by id |
+| skills; contracts with shared values; check | `skills` (embedded); `data_access` and `authority`; `checks: [ { command, after: each-turn } ]` |
 | `resume` | `resume` |
-| groups with their boxes | `groups`, and `layout.groups` |
-| `hands-work-to`, `reports-to`, `watches` | `handoff`, `report`, `watch` |
+| groups with their boxes | `groups`, and `layout.groups` (a group with no box is not drawn) |
+| hands work to, reports to, watches | `handoff`, `report`, `watch` |
 | the Input | `inputs` |
-| `limits.max_child_levels` | `defaults.restrictions.spawn.max_depth` |
+| most levels of children | `defaults.restrictions.spawn.max_depth` |
 | schedules | `policies.schedules` |
-| workflow | `com.usesculptured.workflow`; its stages are also drawn as steps and handoffs with outcome conditions |
-| posture, own copies, question timeout, decision log | `com.usesculptured`, `workspace.copy`, `preferences.questions.timeout` |
+| the decision log | a `decision-log` channel |
+| workflow, its guard, its board positions | `workflows`, `policies.guards`, `layout.stages` and `layout.nodes` |
 
 ## CAMEL
 

@@ -4,19 +4,23 @@
 
 A document is a YAML 1.2 or JSON object. JSON is the canonical form: a reader that writes a
 document SHOULD write JSON or YAML that converts to the same JSON. YAML anchors and merge keys
-(`<<`) MAY be used and are resolved before anything else.
+(`<<`) MAY be used and are resolved before anything else. Files are named `<name>.madl.yaml` or
+`<name>.madl.json`.
 
 Top-level members:
 
 | Member | Required | |
 |---|---|---|
+| `$schema` | no | The URL of the document's JSON Schema, for editors. It has no meaning |
 | `madl` | yes | The revision the document is written for: `draft`, or a dated revision such as `2027-01-15` |
 | `system` | yes | `id`, `name`, optional `description` and [`budget`](#run-budget) |
 | `defaults` | no | The global [settings block](settings.md) |
 | `inputs` | no | What the system is given when it starts |
 | `groups` | no | Groups |
 | `agents` | no | Agents |
+| `tools` | no | [Tools](#tools) defined once and given to agents by id |
 | `steps` | no | Non-agent nodes |
+| `workflows` | no | [Workflows](topology.md#workflows): items passed through stages |
 | `channels` | no | [Channels](communication.md#channels) |
 | `connections` | no | [Connections](communication.md#connections) |
 | `communication` | no | System-wide [mode and bans](communication.md#open-and-closed-communication) |
@@ -33,7 +37,8 @@ A reader MUST reject a document whose `madl` names a revision it does not implem
 
 ## Ids
 
-Agents, groups, steps, inputs, channels, connections, patterns and schedules have ids. An id
+Agents, groups, tools, steps, workflows, inputs, channels, connections, patterns and schedules have
+ids. A workflow's stages have ids that are unique within their workflow. An id
 MUST match `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$` (`bad-id`) and MUST be unique across all of these
 in one document (`duplicate-id`). Because ids are unique document-wide, every reference is a plain
 id.
@@ -97,13 +102,16 @@ system:
     tokens: { hard: 50000000 }
     wall_clock: { soft: 45m, hard: 1h }
     max_working: 6
+    max_agents: 12
 ```
 
 | Member | Meaning |
 |---|---|
 | `plan` | Shares of a provider's plan window in percent, above 0 and at most 100 (`budget-percent-out-of-range`). The run's share is the window's change since the run started, so use outside the run counts too. |
+| `plan[].pause` | At the hard value, pause the run instead of stopping it, and continue once the window resets: `continue_with` (`notes`, the default: each agent starts afresh from the note it wrote when the run wrapped up; `resume`: each continues its own conversation) and `max_windows` (default 3, at least 1: `budget-no-windows`) ([MEP 0008](../../meps/0008-runner-settings.md)) |
 | `tokens`, `cost_usd`, `wall_clock` | Limits for the run |
 | `max_working` | Most agents working at the same time; the rest wait for a free slot; at least 1 (`budget-no-room`) |
+| `max_agents` | Most agents in the system at once, its own and those they spawn together; at least 1 (`budget-no-room`) ([MEP 0006](../../meps/0006-shared-definitions.md)) |
 
 A run budget and the agents' own budgets all apply; whichever is reached first acts.
 
@@ -133,13 +141,13 @@ to the group, the group's name and purpose.
 | `runtime`, `model`, `resume` | Shorthand for the same fields of `settings.preferences`; setting both is an error (`shorthand-conflict`) |
 | `endpoint` | For `runtime: remote-a2a`: the agent's A2A endpoint or Agent Card URL; required for that runtime (`remote-needs-endpoint`) |
 | `groups` | Group ids |
-| `tools` | Tools the agent is given: `{ id, mcp: { command, args, env, url } }` or `{ id, builtin: "<runtime>:<name>" }`. Restrictions decide which may be used |
+| `tools` | Tools the agent is given: a [tool](#tools), or the id of one of the document's `tools` (or of a tool the runner provides). Restrictions decide which may be used |
 | `skills` | Skill paths or names, or embedded skills `{ name, description, body }` in the Agent Skills format (name: lowercase letters, digits and hyphens, at most 64; description: when to use it, at most 1024 characters) |
 | `context` | Files given as context |
-| `workspace` | `folder`, and `copy`: `own` (its own git copy), `shared`, or `per-item` |
+| `workspace` | `folder`, and `copy`: `own` (its own git copy), `shared`, or `per-item`. Each member left out comes from [`preferences.workspace`](settings.md#preferences) |
 | `placement` | `machine`: properties a machine must have, such as `os` or `name` |
 | `outputs` | `{ id, path, description, acceptance }`: what the agent produces; connections `carry` them. `acceptance`: checks that must all pass for the output to count as done |
-| `data_access` | `{ reads, writes, side_effects, rationale }`: the agent's data contract (see below) |
+| `data_access` | `{ reads, writes, side_effects, rationale, shared }`: the agent's data contract (see below) |
 | `authority` | `{ domains, rationale }`: the decisions the agent owns (see below) |
 | `checks` | `{ command, after: each-turn \| finish, timeout_s }`: exit 0 means passed |
 | `settings`, `subagents` | See [Settings](settings.md) |
@@ -157,6 +165,11 @@ document (a trailing `/` or `/**` covers a folder), its effects beyond files in 
 A Runner SHOULD refuse a write outside `writes` where it can, and MUST tell the person where it
 cannot. `restrictions.files` stays the hard limit; the two combine by tightening.
 
+`data_access.shared` lists values other agents rely on, such as a port, an endpoint or a field name:
+`{ name, value, file }`, where `file` (relative to the document) must contain `value` exactly. A
+Runner SHOULD check each at every start, tell the agents that rely on it, and say when a file no
+longer holds it ([MEP 0006](../../meps/0006-shared-definitions.md)).
+
 `authority` names the decisions an agent owns. A Runner SHOULD tell every agent who decides what,
 and send a question within a domain to its owner. Its `scope` (a group id, or `system`) says how far
 those decisions reach: a decision belongs to the agent whose scope contains its consequences.
@@ -169,8 +182,47 @@ the author should know.
 An output's `acceptance` checks decide when it is done: every one exits 0. A Runner MUST NOT report
 an output as verified without running them.
 
-Environment values in an MCP server's `env` are either text or `{ secret: NAME }`; secret values
-MUST NOT be written into documents.
+## Tools
+
+A tool is what an agent is given beyond its instructions. It is written on the agent, or once in
+the top-level `tools` and given to agents by id ([MEP 0006](../../meps/0006-shared-definitions.md)):
+
+```yaml
+tools:
+  - id: notes
+    name: Notes server
+    description: Shared notes.
+    instructions: Write what you learn with `note`.   # what agents given it are told
+    mcp: { command: notes-mcp, args: [--stdio] }
+    install: cargo install notes-mcp                  # for the person setting up a machine
+  - id: docs
+    mcp: { url: "https://docs.example.com/mcp", headers: { Authorization: "Bearer ${DOCS_TOKEN}" } }
+    requires: [notes]
+  - { id: money, skills: [ { name: money-rules, description: Use when handling money., body: Decimal only. } ] }
+  - { id: guard, hook: { command: signet-eval, args: [--rules-path, "{call_rules}"] }, runtimes: [claude-code] }
+  - { id: review, plugin: review@acme, runtimes: [claude-code] }
+agents:
+  - { id: wing, tools: [notes, docs, { id: search, builtin: "claude-code:WebSearch" }] }
+```
+
+At most one of these says what a tool is (`tool-shape`); with none, its id names a tool the runner
+provides.
+
+| Member | |
+|---|---|
+| `mcp` | An MCP server: `command`, `args` and `env` to start one (stdio), or `url` and `headers` to reach one (HTTP) |
+| `builtin` | A runtime's own tool, as `<runtime>:<name>` |
+| `hook` | `{ command, args }`: a program the runner calls before each of the agent's tool calls, with the call as JSON in the runtime's hook format; it may refuse the call. `{call_rules}` in an argument is replaced by the path of a file holding the agent's effective [`restrictions.tools.refuse`](settings.md#restrictions) |
+| `plugin` | A plugin installed for the agent's runtime, as `name@marketplace` |
+| `skills` | Embedded skills, added to the agent's own; nothing runs |
+
+Any tool may have `name`, `description`, `instructions` (what agents given it are told), `runtimes`
+(the runtimes it works with; empty: any, each a known runtime: `unknown-runtime`), `requires` (tool
+ids that come with it), `install` (how to set it up on a machine) and `homepage`.
+
+Environment values in an MCP server's `env` are either text or `{ secret: NAME }`, and `${NAME}` in
+its `url` or `headers` names a secret the runner fills in; secret values MUST NOT be written into
+documents.
 
 ## Steps
 
@@ -193,14 +245,15 @@ layout:
   groups: { design: { x: -40, y: 20, w: 480, h: 180 } }
 ```
 
-`nodes` holds positions for agents, steps and inputs; `groups` holds boxes. Layout has no meaning
-for execution. A reader MAY ignore it; a writer MUST keep the entries of components it did not
+`nodes` holds positions for agents, steps and inputs; `groups` holds boxes, and in a document with a
+`layout` a group without a box is not drawn; `stages` holds positions for [workflow](topology.md#workflows)
+stages, by workflow id and then stage id. Layout has no meaning for execution. A reader MAY ignore it; a writer MUST keep the entries of components it did not
 change.
 
 ## Extensions
 
 `extensions` maps reverse-DNS namespaces (`com.usesculptured`, `ai.camel`) to any JSON value. It
-MAY appear at the top level and on agents, groups, channels, connections and steps. A key that is
+MAY appear at the top level and on agents, groups, channels, connections, steps and workflows. A key that is
 not a reverse-DNS name is an error (`bad-extension-key`). Readers MUST ignore namespaces they do
 not know and MUST keep them when they write the document back.
 

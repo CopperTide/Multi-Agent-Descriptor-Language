@@ -12,6 +12,8 @@ pub enum Kind {
     Connection,
     Pattern,
     Schedule,
+    Tool,
+    Workflow,
 }
 
 impl Kind {
@@ -25,6 +27,8 @@ impl Kind {
             Kind::Connection => "a connection",
             Kind::Pattern => "a pattern",
             Kind::Schedule => "a schedule",
+            Kind::Tool => "a tool",
+            Kind::Workflow => "a workflow",
         }
     }
 }
@@ -66,7 +70,7 @@ impl Index {
 type IdList<'a> = (Kind, &'static str, Vec<Option<&'a String>>);
 
 /// Every list whose entries have document-wide ids.
-fn lists(doc: &Document) -> [IdList<'_>; 8] {
+fn lists(doc: &Document) -> [IdList<'_>; 10] {
     fn ids(v: Vec<&String>) -> Vec<Option<&String>> {
         v.into_iter().map(Some).collect()
     }
@@ -79,6 +83,8 @@ fn lists(doc: &Document) -> [IdList<'_>; 8] {
         (Kind::Connection, "connections", doc.connections.iter().map(|c| c.id.as_ref()).collect()),
         (Kind::Pattern, "topology/patterns", patterns(doc)),
         (Kind::Schedule, "policies/schedules", schedules(doc)),
+        (Kind::Tool, "tools", ids(doc.tools.iter().map(|t| &t.id).collect())),
+        (Kind::Workflow, "workflows", ids(doc.workflows.iter().map(|w| &w.id).collect())),
     ]
 }
 

@@ -16,7 +16,8 @@ pub const RUNTIMES: &[&str] = &[
     "remote-a2a",
     "human",
 ];
-pub const MEDIUMS: &[&str] = &["direct", "filesystem", "shared-memory", "blackboard", "bus", "git", "tracker", "human"];
+pub const MEDIUMS: &[&str] =
+    &["direct", "filesystem", "shared-memory", "blackboard", "bus", "git", "tracker", "human", "decision-log"];
 const PROTOCOLS: &[&str] = &["native", "a2a", "mcp"];
 
 /// `x-<vendor>-<name>`: lowercase letters, digits and `-`.
@@ -48,6 +49,14 @@ pub fn check(doc: &Document, report: &mut Report) {
     channels_and_connections(doc, report);
     policies(doc, report);
     extension_keys(doc.extensions.keys(), "/extensions", report);
+    for (i, t) in doc.tools.iter().enumerate() {
+        for (j, r) in t.runtimes.iter().enumerate() {
+            runtime(Some(r), &format!("/tools/{i}/runtimes/{j}"), report);
+        }
+    }
+    for (i, w) in doc.workflows.iter().enumerate() {
+        extension_keys(w.extensions.keys(), &format!("/workflows/{i}/extensions"), report);
+    }
 }
 
 fn agent(a: &crate::model::Agent, at: &str, report: &mut Report) {
@@ -110,6 +119,9 @@ pub fn settings_blocks(doc: &Document) -> Vec<(String, &Settings)> {
 fn settings(s: &Settings, at: &str, report: &mut Report) {
     if let Some(p) = &s.preferences {
         runtime(p.runtime.as_deref(), &format!("{at}/preferences/runtime"), report);
+        for r in p.models.keys() {
+            runtime(Some(r), &format!("{at}/preferences/models/{r}"), report);
+        }
         protocol(p.protocol.as_deref(), &format!("{at}/preferences/protocol"), report);
         let timeout = p.questions.as_ref().and_then(|q| q.timeout.as_deref());
         duration_of(timeout, &format!("{at}/preferences/questions/timeout"), report);
