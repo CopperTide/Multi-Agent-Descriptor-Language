@@ -142,7 +142,7 @@ to the group, the group's name and purpose.
 | `endpoint` | For `runtime: remote-a2a`: the agent's A2A endpoint or Agent Card URL; required for that runtime (`remote-needs-endpoint`) |
 | `groups` | Group ids |
 | `tools` | Tools the agent is given: a [tool](#tools), or the id of one of the document's `tools` (or of a tool the runner provides). Restrictions decide which may be used |
-| `skills` | Skill paths or names, or embedded skills `{ name, description, body }` in the Agent Skills format (name: lowercase letters, digits and hyphens, at most 64; description: when to use it, at most 1024 characters) |
+| `skills` | Skill paths or names, or embedded skills `{ name, description, body, source? }` in the Agent Skills format (name: lowercase letters, digits and hyphens, at most 64; description: when to use it, at most 1024 characters; source: the `https://` address it was copied from, such as a catalog file at a commit) |
 | `context` | Files given as context |
 | `workspace` | `folder`, and `copy`: `own` (its own git copy), `shared`, or `per-item`. Each member left out comes from [`preferences.workspace`](settings.md#preferences) |
 | `placement` | `machine`: properties a machine must have, such as `os` or `name` |

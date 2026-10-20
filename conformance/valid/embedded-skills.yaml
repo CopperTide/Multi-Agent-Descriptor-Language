@@ -7,6 +7,7 @@ agents:
       - skills/house-style
       - name: money-rules
         description: Use when handling amounts of money.
+        source: https://github.com/example/skills/blob/4f2a9c1/money-rules/SKILL.md
         body: |
           # Money
           Amounts are Decimal, never float. Round half-even to cents.

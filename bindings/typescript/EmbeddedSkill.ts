@@ -4,4 +4,9 @@
  * A skill in the Agent Skills format: `name` (lowercase letters, digits and hyphens, at most 64),
  * `description` (when to use it, at most 1024 characters) and `body` (the `SKILL.md` instructions).
  */
-export type EmbeddedSkill = { name: string, description: string, body: string, };
+export type EmbeddedSkill = { name: string, description: string, body: string, 
+/**
+ * Where it was copied from (an `https://` address, such as a catalog file at a commit), so a
+ * reader can see where it came from and update it.
+ */
+source?: string, };

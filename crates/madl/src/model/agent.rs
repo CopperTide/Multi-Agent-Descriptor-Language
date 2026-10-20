@@ -268,4 +268,9 @@ pub struct EmbeddedSkill {
     pub name: String,
     pub description: String,
     pub body: String,
+    /// Where it was copied from (an `https://` address, such as a catalog file at a commit), so a
+    /// reader can see where it came from and update it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub source: Option<String>,
 }

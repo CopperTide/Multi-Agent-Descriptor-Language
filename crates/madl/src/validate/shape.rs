@@ -126,6 +126,13 @@ fn embedded<'a>(s: &'a EmbeddedSkill, at: &str, seen: &mut BTreeSet<&'a str>, re
     if s.body.trim().is_empty() {
         report.push(Diagnostic::error("skill-shape", format!("{at}/body"), "an embedded skill needs a body"));
     }
+    if s.source
+        .as_ref()
+        .is_some_and(|u| !u.starts_with("https://") || u.len() > 500 || u.chars().any(char::is_whitespace))
+    {
+        let why = "a skill's source is the https:// address it was copied from, at most 500 characters";
+        report.push(Diagnostic::error("skill-shape", format!("{at}/source"), why));
+    }
     if !seen.insert(n.as_str()) {
         let why = format!("two skills are named `{n}`");
         report.push(Diagnostic::error("duplicate-skill", format!("{at}/name"), why));

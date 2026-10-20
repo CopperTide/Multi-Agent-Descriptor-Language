@@ -4,6 +4,9 @@
 
 The first public draft.
 
+- An embedded skill may say where it was copied from: `source`, an `https://` address (such as a
+  catalog's `SKILL.md` at a commit). A source that is not one is `skill-shape`.
+
 - MEP 0008: runner settings: `preferences.context` (large reads, tool output, a fresh context past a
   size, or `managed: false`), `preferences.briefing` (`full` or `minimal`), `preferences.config` (the runtime's user and project configuration),
   `restrictions.budget.counts` (`all`, `new`, `output`) and `system.budget.plan[].pause`
