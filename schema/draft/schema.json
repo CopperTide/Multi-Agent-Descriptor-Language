@@ -547,6 +547,84 @@
       },
       "additionalProperties": false
     },
+    "ChangePolicy": {
+      "description": "What a change an agent proposes (an order, a reschedule, a record in another system) must meet\nbefore it is made, and whether one that meets every rule needs a person (MEP 0009).",
+      "type": "object",
+      "properties": {
+        "approve_within_rules": {
+          "description": "`true`: a change that passes every rule that applies to it is approved without a person. A\nchange no rule applies to always waits for one. Default `false`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChangeRule"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChangeRule": {
+      "description": "For changes of `action` (`*`, the default: every change), the change's `field` passes exactly one\ntest: `at_most`, `at_least`, `one_of` or `present`.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "The kind of change, as the agent names it (`create_purchase_order`), or `*`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "at_least": {
+          "description": "A number no less than this.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "at_most": {
+          "description": "A number, or a number written as text, no greater than this.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "field": {
+          "description": "A dotted path into the change's fields, such as `amount` or `lines.0.item`.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "one_of": {
+          "description": "One of these, compared as text, ignoring case and surrounding spaces.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "present": {
+          "description": "`true`: present and not empty.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "field"
+      ]
+    },
     "Channel": {
       "description": "Where messages or artifacts travel.",
       "type": "object",
@@ -1741,6 +1819,17 @@
     "Policies": {
       "type": "object",
       "properties": {
+        "changes": {
+          "description": "Rules for the changes agents propose to systems outside the run (MEP 0009).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChangePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "escalation": {
           "type": "array",
           "items": {

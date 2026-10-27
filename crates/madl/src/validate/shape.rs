@@ -10,6 +10,9 @@ pub fn check(doc: &Document, report: &mut Report) {
     patterns(doc, report);
     skills(doc, report);
     tools(doc, report);
+    if let Some(c) = doc.policies.as_ref().and_then(|p| p.changes.as_ref()) {
+        change_rules(&c.rules, report);
+    }
     let rules = doc.communication.iter().flat_map(|c| c.deny.iter().enumerate());
     for (i, rule) in rules {
         let pair = rule.from.is_some() && rule.to.is_some();
@@ -19,6 +22,29 @@ pub fn check(doc: &Document, report: &mut Report) {
                 "deny-shape",
                 format!("/communication/deny/{i}"),
                 "a ban has either `from` and `to`, or `between`",
+            ));
+        }
+    }
+}
+
+/// Each change rule has exactly one test, and a rule id is used once.
+fn change_rules(rules: &[crate::model::ChangeRule], report: &mut Report) {
+    let mut seen = BTreeSet::new();
+    for (i, r) in rules.iter().enumerate() {
+        let at = format!("/policies/changes/rules/{i}");
+        if !seen.insert(r.id.as_str()) {
+            report.push(Diagnostic::error(
+                "duplicate-id",
+                format!("{at}/id"),
+                format!("`{}` is already a rule here", r.id),
+            ));
+        }
+        let tests = [r.at_most.is_some(), r.at_least.is_some(), r.one_of.is_some(), r.present == Some(true)];
+        if tests.iter().filter(|t| **t).count() != 1 {
+            report.push(Diagnostic::error(
+                "change-rule-shape",
+                at,
+                "a change rule has exactly one test: `at_most`, `at_least`, `one_of` or `present: true`",
             ));
         }
     }

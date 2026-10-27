@@ -130,3 +130,24 @@ policies:
 - `escalation` hands work from an agent or step to a stronger agent after a number of rounds.
 - `schedules` send an agent a message at an interval.
 - `guards` are commands that pause new work while they fail.
+- `changes` ([MEP 0009](../../meps/0009-change-rules.md)) holds the rules a change an agent proposes
+  to a system outside the run (an order, a reschedule, a record) must meet before it is made:
+
+  ```yaml
+  policies:
+    changes:
+      approve_within_rules: true
+      rules:
+        - { id: limit, action: create_purchase_order, field: amount, at_most: 5000 }
+        - { id: vendors, action: create_purchase_order, field: supplier, one_of: [Acme Hydraulics, Bolt & Co] }
+        - { id: why, field: reason, present: true }
+  ```
+
+  A rule applies to changes of its `action` (`*`, the default, is every change) and tests one
+  `field`, a dotted path into the change's fields (`lines.0.item`), with exactly one of `at_most`,
+  `at_least` (numbers; a number written as text counts, ignoring a currency sign and thousands
+  separators), `one_of` (text, ignoring case and surrounding spaces) or `present: true` (there and
+  not empty). A missing field fails its rule. With `approve_within_rules: true`, a change that passes
+  every rule that applies to it is approved without a person; a change no rule applies to, or one
+  that fails a rule, waits for a person. A person not answering in time means not approved. The
+  runner evaluates the rules itself, never the agent, and an agent cannot change them.

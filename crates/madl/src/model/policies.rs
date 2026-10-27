@@ -1,4 +1,4 @@
-//! Failure handling, escalation, schedules and guards; drawing; extensions.
+//! Failure handling, escalation, schedules, guards and change rules; drawing; extensions.
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -26,6 +26,57 @@ pub struct Policies {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Guard>>", optional)]
     pub guards: Vec<Guard>,
+    /// Rules for the changes agents propose to systems outside the run (MEP 0009).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub changes: Option<ChangePolicy>,
+}
+
+/// What a change an agent proposes (an order, a reschedule, a record in another system) must meet
+/// before it is made, and whether one that meets every rule needs a person (MEP 0009).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(export)]
+pub struct ChangePolicy {
+    /// `true`: a change that passes every rule that applies to it is approved without a person. A
+    /// change no rule applies to always waits for one. Default `false`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub approve_within_rules: Option<bool>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<ChangeRule>>", optional)]
+    pub rules: Vec<ChangeRule>,
+}
+
+/// For changes of `action` (`*`, the default: every change), the change's `field` passes exactly one
+/// test: `at_most`, `at_least`, `one_of` or `present`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(export)]
+pub struct ChangeRule {
+    pub id: String,
+    /// The kind of change, as the agent names it (`create_purchase_order`), or `*`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub action: Option<String>,
+    /// A dotted path into the change's fields, such as `amount` or `lines.0.item`.
+    pub field: String,
+    /// A number, or a number written as text, no greater than this.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub at_most: Option<f64>,
+    /// A number no less than this.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub at_least: Option<f64>,
+    /// One of these, compared as text, ignoring case and surrounding spaces.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub one_of: Option<Vec<String>>,
+    /// `true`: present and not empty.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub present: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema, TS)]

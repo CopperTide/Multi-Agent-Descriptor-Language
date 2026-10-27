@@ -4,6 +4,10 @@
 
 The first public draft.
 
+- MEP 0009: `policies.changes`: rules a change an agent proposes to an outside system must meet
+  (`at_most`, `at_least`, `one_of`, `present` on a field of the change, for one `action` or all),
+  and `approve_within_rules`. New code `change-rule-shape`.
+
 - An embedded skill may say where it was copied from: `source`, an `https://` address (such as a
   catalog's `SKILL.md` at a commit). A source that is not one is `skill-shape`.
 

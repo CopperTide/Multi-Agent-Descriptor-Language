@@ -14,3 +14,4 @@ A MEP proposes a change to what a MADL document can say or means. The process is
 | [0006](0006-shared-definitions.md) | Shared tools, a model per runtime, workspace defaults, shared values, call rules and a decision log | Accepted into `draft` |
 | [0007](0007-workflows.md) | Workflows | Accepted into `draft` |
 | [0008](0008-runner-settings.md) | Runner settings | Accepted into `draft` |
+| [0009](0009-change-rules.md) | Change rules | Accepted into `draft` |

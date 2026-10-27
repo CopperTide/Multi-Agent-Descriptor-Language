@@ -1,0 +1,4 @@
+madl: draft
+system: { id: s, name: S }
+agents: [ { id: a } ]
+policies: { changes: { rules: [ { id: r, field: amount, at_most: 5, at_least: 1 } ] } }

@@ -1,0 +1,13 @@
+# MEP 0009: the rules a change an agent proposes must meet, and approval within them.
+madl: draft
+system: { id: plant, name: Plant incident team }
+agents:
+  - { id: buyer, runtime: claude-code }
+policies:
+  changes:
+    approve_within_rules: true
+    rules:
+      - { id: limit, action: create_purchase_order, field: amount, at_most: 5000 }
+      - { id: vendors, action: create_purchase_order, field: supplier, one_of: [Acme Hydraulics, Bolt & Co] }
+      - { id: quantity, field: quantity, at_least: 1 }
+      - { id: why, field: reason, present: true }
