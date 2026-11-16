@@ -102,7 +102,7 @@ Editors can validate and complete MADL files with the published schema,
 
 ## Implementations
 
-- **[Sculptured](https://github.com/Alexander-Aghili/Sculptured)** keeps its teams as MADL: it exports any team as `.madl.json` and imports MADL files in JSON or YAML as teams.
+- **[CopperTide](https://github.com/CopperTide/CopperTide)** keeps its teams as MADL: it exports any team as `.madl.json` and imports MADL files in JSON or YAML as teams.
 
 Python and TypeScript packages and a CAMEL adapter are planned; they will call the Rust core so
 their behaviour cannot drift from the spec's fixtures.
